@@ -1,3 +1,4 @@
+from ast import parse
 import os
 import sys
 import time
@@ -69,6 +70,7 @@ def parse_option():
     parser.add_argument('--use_height', action='store_true', help='Use height signal in input.')
     parser.add_argument('--use_color', action='store_true', help='Use RGB color in input.')
     parser.add_argument('--use_sunrgbd_v2', action='store_true', help='Use SUN RGB-D V2 box labels.')
+    parser.add_argument("--in_ply", type=str, required=True, help="A path to target ply file")
 
     args, unparsed = parser.parse_known_args()
 
