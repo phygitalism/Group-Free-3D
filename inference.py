@@ -1,10 +1,6 @@
 import os
-import sys
-import time
 import numpy as np
 from datetime import datetime
-import argparse
-import pdb
 import torch
 import trimesh
 import open3d as o3d
@@ -23,26 +19,18 @@ from eval_avg import parse_option, get_model, load_checkpoint
 from utils import pc_util
 
 def load_pointcloud(path_to_input):
-    with open(path_to_input, "rb") as ply_file_obj:
-        point_cloud_data = exchange.ply.load_ply(ply_file_obj)
-
-    point_cloud = trimesh.PointCloud(**point_cloud_data)
-
-    if not isinstance(point_cloud, trimesh.PointCloud):
-        raise ValueError(f"Expected Trimesh but got {type(point_cloud)}")
-    
+    point_cloud = o3d.io.read_point_cloud(path_to_input)
     return point_cloud
 
-def transform(trimesh_point_cloud, num_points: int, use_colors: bool, use_height: bool):
+def transform(open3d_point_cloud, num_points: int, use_colors: bool, use_height: bool):
     """point_cloud N x 6 (x, y, z, r, g, b)
     """
-    if len(trimesh_point_cloud.colors) == 0:
+    if len(open3d_point_cloud.colors) == 0:
         raise ValueError("cannot find color in an input point cloud")
 
-    point_cloud = np.array(trimesh_point_cloud.vertices)
+    point_cloud = np.asarray(open3d_point_cloud.points)
     
-    colors = np.array(trimesh_point_cloud.colors, dtype=point_cloud.dtype)
-    colors /= 255.0
+    colors = np.asarray(open3d_point_cloud.colors)
 
     point_cloud = np.hstack((point_cloud, colors))
 
@@ -69,6 +57,7 @@ def transform(trimesh_point_cloud, num_points: int, use_colors: bool, use_height
 @torch.no_grad()
 def main(args, avg_times=5):
     point_cloud = load_pointcloud(args.in_ply)
+    point_cloud, _ = point_cloud.remove_statistical_outlier(args.num_neighs, args.std_ratio)
 
     DATASET_CONFIG = SunrgbdDatasetConfig()
 
@@ -153,8 +142,6 @@ def main(args, avg_times=5):
     proposals = batch_pred_map_cls_dict["last_"][0][0]
 
     visualier = o3d.visualization.Visualizer()
-    pcd = o3d.geometry.PointCloud(o3d.utility.Vector3dVector(np.array(point_cloud.vertices)))
-    pcd.colors = o3d.utility.Vector3dVector(np.array(point_cloud.colors[:, :3]) / 255.0)
 
     visualier.create_window()
 
@@ -170,7 +157,7 @@ def main(args, avg_times=5):
         visualier.add_geometry(bbox)
         print("Detected class: ", DATASET_CONFIG.class2type[proposal[0]])
 
-    visualier.add_geometry(pcd)
+    visualier.add_geometry(point_cloud)
     visualier.run()
 
 

@@ -72,6 +72,8 @@ def parse_option():
     parser.add_argument('--use_color', action='store_true', help='Use RGB color in input.')
     parser.add_argument('--use_sunrgbd_v2', action='store_true', help='Use SUN RGB-D V2 box labels.')
     parser.add_argument("--in_ply", type=str, required=True, help="A path to target ply file")
+    parser.add_argument("--num_neighs", type=int, default=20, help="nb_neighbors in http://www.open3d.org/docs/release/tutorial/geometry/pointcloud_outlier_removal.html?highlight=remove_statistical_outlier#Statistical-outlier-removal")
+    parser.add_argument("--std_ratio", type=float, default=0.01, help="std_ratio in http://www.open3d.org/docs/release/tutorial/geometry/pointcloud_outlier_removal.html?highlight=remove_statistical_outlier#Statistical-outlier-removal")
 
     args, unparsed = parser.parse_known_args()
 
