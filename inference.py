@@ -57,7 +57,9 @@ def transform(open3d_point_cloud, num_points: int, use_colors: bool, use_height:
 @torch.no_grad()
 def main(args, avg_times=5):
     point_cloud = load_pointcloud(args.in_ply)
-    point_cloud, _ = point_cloud.remove_statistical_outlier(args.num_neighs, args.std_ratio)
+
+    if args.filter:
+        point_cloud, _ = point_cloud.remove_statistical_outlier(args.num_neighs, args.std_ratio)
 
     DATASET_CONFIG = SunrgbdDatasetConfig()
 
