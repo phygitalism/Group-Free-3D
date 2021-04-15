@@ -15,6 +15,7 @@ from utils import setup_logger
 from models import GroupFreeDetector, get_loss
 from models import APCalculator, parse_predictions, parse_groundtruths
 
+logger = setup_logger(output="logs", name="eval")
 
 def parse_option():
     parser = argparse.ArgumentParser()
