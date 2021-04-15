@@ -7,7 +7,7 @@ import argparse
 import pdb
 import torch
 import trimesh
-import open3d as op3d
+import open3d as o3d
 from trimesh import exchange
 from sunrgbd.model_util_sunrgbd import SunrgbdDatasetConfig
 from sunrgbd.sunrgbd_detection_dataset import MEAN_COLOR_RGB
@@ -150,20 +150,28 @@ def main(args, avg_times=5):
         batch_pred_map_cls = parse_predictions(end_points, CONFIG_DICT, prefix)
         batch_pred_map_cls_dict[prefix].append(batch_pred_map_cls)
 
-    threshold = 0.25
-
     proposals = batch_pred_map_cls_dict["last_"][0][0]
 
     visualier = o3d.visualization.Visualizer()
-    pcd = o3d.geometry.PointCloud()
-    pcd.points = o3d.utility.Vector3dVector(point_cloud)
+    pcd = o3d.geometry.PointCloud(o3d.utility.Vector3dVector(np.array(point_cloud.vertices)))
+    pcd.colors = o3d.utility.Vector3dVector(np.array(point_cloud.colors[:, :3]) / 255.0)
 
-    for i, proposal in enumerate(proposals):
-        if proposal[-1] >= threshold:
-            box_points = o3d.utility.Vector3dVector(proposal[1])
-            bbox = o3d.geometry.OrientedBoundingBox.create_from_points(box_points)
+    visualier.create_window()
 
-    
+    axes_mesh = o3d.geometry.TriangleMesh.create_coordinate_frame(
+        size=0.6)
+
+    visualier.add_geometry(axes_mesh)
+
+
+    for proposal in proposals:
+        box_points = o3d.utility.Vector3dVector(proposal[1])
+        bbox = o3d.geometry.OrientedBoundingBox.create_from_points(box_points)
+        visualier.add_geometry(bbox)
+        print("Detected class: ", DATASET_CONFIG.class2type[proposal[0]])
+
+    visualier.add_geometry(pcd)
+    visualier.run()
 
 
 if __name__ == '__main__':
